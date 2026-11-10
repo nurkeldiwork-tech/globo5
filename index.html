@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeanWise — Smart Purchase Forecast</title>
+<style>
+:root{--navy:#13283a;--ink:#1e293b;--muted:#718096;--cream:#f7f5f0;--card:#fff;--gold:#c58c5a;--green:#2f855a;--red:#c05656;--line:#e8e5df;--blue:#39749b}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+header{background:var(--navy);color:white;padding:22px max(22px,calc((100% - 1180px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:13px;background:#e7bd8e;color:#182d3d;display:grid;place-items:center;font-size:23px}
+.brand h1{font-size:19px;margin:0;letter-spacing:.2px}.brand p{margin:3px 0 0;color:#b9c8d2;font-size:12px}
+.header-right{display:flex;align-items:center;gap:10px}.pill{border:1px solid #536575;background:transparent;color:white;border-radius:10px;padding:9px 12px;cursor:pointer}
+main{max-width:1180px;margin:28px auto;padding:0 20px 50px}.intro{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:22px}.intro h2{font-size:27px;margin:0 0 7px}.intro p{margin:0;color:var(--muted);font-size:14px}.date{font-size:13px;color:var(--muted);background:white;padding:10px 13px;border:1px solid var(--line);border-radius:10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 4px 18px #26384a08}.stat{padding:17px}.stat-label{color:var(--muted);font-size:12px}.stat-value{font-size:27px;font-weight:750;margin:7px 0 4px}.stat-note{font-size:11px;color:var(--muted)}.stat-icon{float:right;font-size:20px}
+.layout{display:grid;grid-template-columns:1.35fr .9fr;gap:16px}.panel{padding:19px;margin-bottom:16px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.panel h3{margin:0;font-size:16px}.sub{font-size:12px;color:var(--muted);margin-top:4px}
+button,.btn{border:0;border-radius:9px;padding:10px 13px;background:var(--navy);color:white;font-weight:650;font-size:12px;cursor:pointer}.btn.secondary{background:#edf1f3;color:var(--navy)}.btn.gold{background:var(--gold);color:#182d3d}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--muted);font-size:11px;font-weight:650;padding:10px 8px;border-bottom:1px solid var(--line)}td{padding:12px 8px;border-bottom:1px solid #f0eeea}tr:last-child td{border-bottom:0}.product{font-weight:700}.small{font-size:11px;color:var(--muted);display:block;margin-top:3px}.status{display:inline-block;border-radius:20px;padding:5px 8px;font-size:10px;font-weight:700}.ok{background:#e7f5ec;color:#27734b}.warn{background:#fff3dd;color:#9a641b}.danger{background:#fde9e7;color:#ae4943}
+.chart-wrap{height:190px;position:relative}.chart-wrap canvas{width:100%;height:100%}
+.alert{display:flex;gap:10px;padding:12px;border-radius:11px;background:#fff6e8;margin:9px 0;font-size:12px;line-height:1.45}.alert.red{background:#fff0ee}.alert .emoji{font-size:18px}
+.order-row{display:grid;grid-template-columns:1fr 80px 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #f0eeea;font-size:12px}.order-row:last-child{border:0}.order-row input{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
+.order-total{display:flex;justify-content:space-between;font-weight:750;padding:14px 0 4px;border-top:1px solid var(--line);margin-top:8px}.footnote{font-size:11px;color:var(--muted);line-height:1.5;margin-top:13px}
+.filters{display:flex;gap:8px;align-items:center}.filters select{border:1px solid var(--line);background:white;border-radius:9px;padding:9px;font-size:12px}
+footer{text-align:center;color:#8a9299;font-size:11px;padding:15px}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}.intro{align-items:start;flex-direction:column}}
+@media(max-width:480px){header{padding:16px}.brand h1{font-size:16px}.stats{gap:9px}.stat{padding:13px}.stat-value{font-size:22px}main{padding:0 12px 35px}.panel{padding:14px;overflow-x:auto}.date{display:none}table{min-width:510px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand"><div class="logo">☕</div><div><h1>BeanWise</h1><p>SMART PURCHASE FORECAST</p></div></div>
+ <div class="header-right"><button class="pill" id="langBtn" onclick="toggleLang()">ҚАЗ / РУС</button><button class="pill" onclick="resetDemo()" data-i="reset">↻ Демо деректер</button></div>
+</header>
+<main>
+ <section class="intro"><div><h2 data-i="title">Сатып алуды ақылды жоспарлау</h2><p data-i="subtitle">Сатылым, қойма қалдығы және жарамдылық мерзімі негізінде келесі 7 күнге болжам.</p></div><div class="date" id="today"></div></section>
+ <section class="stats">
+  <div class="stat"><span class="stat-icon">📦</span><div class="stat-label" data-i="need">Ұсынылған сатып алу</div><div class="stat-value" id="totalUnits">—</div><div class="stat-note" data-i="neednote">барлық өнім бойынша, дана</div></div>
+  <div class="stat"><span class="stat-icon">⚠️</span><div class="stat-label" data-i="shortage">Жетіспеу қаупі</div><div class="stat-value" id="shortCount">—</div><div class="stat-note" data-i="shortnote">өнім назар аударуды қажет етеді</div></div>
+  <div class="stat"><span class="stat-icon">🗑️</span><div class="stat-label" data-i="expiry">Жарамдылық тәуекелі</div><div class="stat-value" id="expiryCount">—</div><div class="stat-note" data-i="expnote">мерзімі жақындаған өнім</div></div>
+  <div class="stat"><span class="stat-icon">💰</span><div class="stat-label" data-i="budget">Болжамды бюджет</div><div class="stat-value" id="budget">—</div><div class="stat-note" data-i="budnote">ұсынылған тапсырыс құны</div></div>
+ </section>
+ <section class="layout">
+  <div>
+   <div class="panel">
+    <div class="panel-head"><div><h3 data-i="forecast">Сұраныс болжамы</h3><div class="sub" data-i="forecastsub">Соңғы 7 күндегі сатылым және келесі 7 күннің болжамы</div></div><div class="filters"><select id="period" onchange="renderChart()"><option value="7">7 күн</option><option value="14">14 күн</option></select></div></div>
+    <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+   </div>
+   <div class="panel">
+    <div class="panel-head"><div><h3 data-i="inventory">Өнімдер мен қойма</h3><div class="sub" data-i="inventorysub">Қазіргі қалдық, күндік сұраныс және ұсыныс</div></div><button class="btn secondary" onclick="recalculate()" data-i="recalc">↻ Қайта есептеу</button></div>
+    <table><thead><tr><th data-i="product">Өнім</th><th data-i="stock">Қалдық</th><th data-i="daily">Күндік сұраныс</th><th data-i="expirycol">Жарамдылық</th><th data-i="recommend">Ұсыныс</th></tr></thead><tbody id="inventoryBody"></tbody></table>
+   </div>
+  </div>
+  <div>
+   <div class="panel">
+    <div class="panel-head"><div><h3 data-i="alerts">Ескерту орталығы</h3><div class="sub" data-i="alertsub">Жетіспеу және артық қор тәуекелдері</div></div><span class="status warn" data-i="live">DEMO</span></div>
+    <div id="alerts"></div>
+   </div>
+   <div class="panel">
+    <div class="panel-head"><div><h3 data-i="order">Ұсынылған тапсырыс</h3><div class="sub" data-i="ordersub">Сандарды менеджер өзгерте алады</div></div></div>
+    <div id="orderList"></div>
+    <div class="order-total"><span data-i="total">Жалпы құны</span><span id="orderTotal">—</span></div>
+    <button class="btn gold" style="width:100%;margin-top:14px" onclick="confirmOrder()" data-i="confirm">Тапсырысты растау</button>
+    <div class="footnote" data-i="disclaimer">Бұл — хакатонға арналған демо-прототип. Нақты болжам үшін кофехананың POS сатылымдары, жеткізу уақыты және өнімдердің нақты жарамдылық деректері қосылуы керек.</div>
+   </div>
+  </div>
+ </section>
+</main>
+<footer>BeanWise • Global Coffee × Coyote Hackathon • Prototype</footer>
+<script>
+const productsSeed=[
+ {id:1,name:"Сүт / Молоко",stock:18,sales:[12,14,13,15,16,14,17],expiry:2,price:450,unit:"л",lead:1},
+ {id:2,name:"Кофе дәні / Кофейные зёрна",stock:8,sales:[5,6,5,7,6,8,7],expiry:45,price:6200,unit:"кг",lead:2},
+ {id:3,name:"Сұлы сүті / Овсяное молоко",stock:14,sales:[3,4,3,5,4,4,5],expiry:8,price:850,unit:"л",lead:1},
+ {id:4,name:"Қағаз стақан / Бумажные стаканы",stock:120,sales:[22,25,24,28,26,30,27],expiry:365,price:35,unit:"дана",lead:3},
+ {id:5,name:"Шоколад шәрбаты / Шоколадный сироп",stock:5,sales:[2,2,3,2,3,3,4],expiry:18,price:1700,unit:"құты",lead:2}
+];
+let products=JSON.parse(JSON.stringify(productsSeed)), lang="kk", order={};
+const tr={
+ kk:{title:"Сатып алуды ақылды жоспарлау",subtitle:"Сатылым, қойма қалдығы және жарамдылық мерзімі негізінде келесі 7 күнге болжам.",reset:"↻ Демо деректер",need:"Ұсынылған сатып алу",neednote:"барлық өнім бойынша, дана",shortage:"Жетіспеу қаупі",shortnote:"өнім назар аударуды қажет етеді",expiry:"Жарамдылық тәуекелі",expnote:"мерзімі жақындаған өнім",budget:"Болжамды бюджет",budnote:"ұсынылған тапсырыс құны",forecast:"Сұраныс болжамы",forecastsub:"Соңғы 7 күндегі сатылым және келесі 7 күннің болжамы",inventory:"Өнімдер мен қойма",inventorysub:"Қазіргі қалдық, күндік сұраныс және ұсыныс",recalc:"↻ Қайта есептеу",product:"Өнім",stock:"Қалдық",daily:"Күндік сұраныс",expirycol:"Мерзім (күн)",recommend:"Ұсыныс",alerts:"Ескерту орталығы",alertsub:"Жетіспеу және артық қор тәуекелдері",live:"ДЕМО",order:"Ұсынылған тапсырыс",ordersub:"Сандарды менеджер өзгерте алады",total:"Жалпы құны",confirm:"Тапсырысты растау",disclaimer:"Бұл — хакатонға арналған демо-прототип. Нақты болжам үшін кофехананың POS сатылымдары, жеткізу уақыты және өнімдердің нақты жарамдылық деректері қосылуы керек.",none:"Қазір шұғыл ескерту жоқ.",buy:"Сатып алу",days:"күнге жетеді",expiryAlert:"Жарамдылық мерзімі жақын",shortAlert:"Қалдық сұранысқа жетпейді",excess:"Артық қор болуы мүмкін",confirmMsg:"Демо тапсырыс расталды! Бұл әрекет нақты жеткізушіге тапсырыс жібермейді.",units:"дана",chartActual:"Нақты сатылым",chartForecast:"Болжам",statusOK:"Қалыпты",statusWarn:"Назар аудару",statusBad:"Сатып алу керек"},
+ ru:{title:"Умное планирование закупок",subtitle:"Прогноз на следующие 7 дней на основе продаж, остатков и сроков годности.",reset:"↻ Демо-данные",need:"Рекомендуемая закупка",neednote:"по всем позициям, единиц",shortage:"Риск нехватки",shortnote:"позиций требуют внимания",expiry:"Риск срока годности",expnote:"позиций с близким сроком",budget:"Примерный бюджет",budnote:"стоимость рекомендуемого заказа",forecast:"Прогноз спроса",forecastsub:"Продажи за последние 7 дней и прогноз на следующие 7 дней",inventory:"Товары и склад",inventorysub:"Текущий остаток, дневной спрос и рекомендация",recalc:"↻ Пересчитать",product:"Товар",stock:"Остаток",daily:"Спрос в день",expirycol:"Срок (дней)",recommend:"Рекомендация",alerts:"Центр предупреждений",alertsub:"Риски нехватки и излишков",live:"ДЕМО",order:"Рекомендуемый заказ",ordersub:"Менеджер может изменить количество",total:"Общая стоимость",confirm:"Подтвердить заказ",disclaimer:"Это демо-прототип для хакатона. Для точного прогноза нужно подключить POS-продажи кофейни, сроки поставки и реальные данные о сроках годности.",none:"Срочных предупреждений нет.",buy:"Закупить",days:"дн. запаса",expiryAlert:"Скоро истекает срок годности",shortAlert:"Остатка не хватит на спрос",excess:"Возможен излишек",confirmMsg:"Демо-заказ подтверждён! Заказ поставщику не отправлен.",units:"шт.",chartActual:"Фактические продажи",chartForecast:"Прогноз",statusOK:"Норма",statusWarn:"Внимание",statusBad:"Нужно закупить"}
+};
+function t(k){return tr[lang][k]||k}
+function calc(p){let avg=p.sales.reduce((a,b)=>a+b,0)/p.sales.length;let demand=Math.ceil(avg*7);let safety=Math.ceil(avg*p.lead);let target=demand+safety;let qty=Math.max(0,target-p.stock);return {avg,demand,safety,qty,days:p.stock/Math.max(avg,.1)}}
+function render(){
+ document.querySelectorAll("[data-i]").forEach(el=>el.textContent=t(el.dataset.i));
+ let total=0,short=0,exp=0;
+ document.getElementById("inventoryBody").innerHTML=products.map(p=>{let c=calc(p);total+=c.qty; if(c.qty>0)short++;if(p.expiry<=7)exp++;
+ let status=c.qty>0?`<span class="status danger">${t("statusBad")}</span>`:c.days<10?`<span class="status warn">${t("statusWarn")}</span>`:`<span class="status ok">${t("statusOK")}</span>`;
+ return `<tr><td><span class="product">${p.name}</span><span class="small">${p.unit}</span></td><td>${p.stock}</td><td>${c.avg.toFixed(1)}</td><td>${p.expiry<=7?'<span class="status warn">'+p.expiry+'</span>':p.expiry}</td><td>${c.qty>0?'<b>'+t("buy")+' '+c.qty+'</b>':status}</td></tr>`}).join("");
+ document.getElementById("totalUnits").textContent=total;
+ document.getElementById("shortCount").textContent=short;
+ document.getElementById("expiryCount").textContent=exp;
+ order={};products.forEach(p=>order[p.id]=calc(p).qty);
+ renderOrder();renderAlerts();renderChart();
+}
+function renderAlerts(){
+ let list=[];
+ products.forEach(p=>{let c=calc(p);if(c.qty>0)list.push({type:"red",emoji:"🚨",msg:`${p.name}: ${t("shortAlert")}. ${t("buy")} ${c.qty} ${p.unit}.`});
+ if(p.expiry<=7)list.push({type:"",emoji:"⏳",msg:`${p.name}: ${t("expiryAlert")} — ${p.expiry} ${t("days")}.`});
+ if(c.days>20&&c.qty===0)list.push({type:"",emoji:"📦",msg:`${p.name}: ${t("excess")} (${Math.floor(c.days)} ${t("days")}).`});});
+ document.getElementById("alerts").innerHTML=list.length?list.map(a=>`<div class="alert ${a.type}"><span class="emoji">${a.emoji}</span><span>${a.msg}</span></div>`).join():`<div class="alert"><span class="emoji">✅</span>${t("none")}</div>`;
+}
+function renderOrder(){
+ let total=0,units=0;
+ document.getElementById("orderList").innerHTML=products.map(p=>{let q=Number(order[p.id]||0);total+=q*p.price;units+=q;return `<div class="order-row"><div><b>${p.name}</b><span class="small">${p.price.toLocaleString()} ₸ / ${p.unit}</span></div><input aria-label="quantity" type="number" min="0" value="${q}" onchange="changeQty(${p.id},this.value)"><div style="text-align:right;font-weight:700">${(q*p.price).toLocaleString()} ₸</div></div>`}).join("");
+ document.getElementById("orderTotal").textContent=total.toLocaleString()+" ₸";
+ document.getElementById("budget").textContent=total>=1000000?(total/1000000).toFixed(2)+" млн ₸":total.toLocaleString()+" ₸";
+ document.getElementById("totalUnits").textContent=units;
+}
+function changeQty(id,val){order[id]=Math.max(0,Math.floor(Number(val)||0));renderOrder()}
+function recalculate(){render()}
+function resetDemo(){products=JSON.parse(JSON.stringify(productsSeed));render()}
+function confirmOrder(){alert(t("confirmMsg"))}
+function toggleLang(){lang=lang==="kk"?"ru":"kk";document.documentElement.lang=lang;document.getElementById("langBtn").textContent=lang==="kk"?"ҚАЗ / РУС":"РУС / ҚАЗ";render()}
+function renderChart(){
+ let canvas=document.getElementById("salesChart"),ctx=canvas.getContext("2d"),w=canvas.clientWidth,h=canvas.clientHeight,dpr=window.devicePixelRatio||1;
+ canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);
+ let n=Number(document.getElementById("period").value), actual=products[0].sales, avg=actual.reduce((a,b)=>a+b,0)/7;
+ let vals=[...actual,...Array.from({length:n},()=>avg*1.04)], max=Math.max(...vals)*1.25, left=30,bottom=25,top=12,right=10,plotW=w-left-right,plotH=h-top-bottom;
+ ctx.font="10px system-ui";ctx.strokeStyle="#eeeae4";ctx.fillStyle="#89939a";
+ for(let i=0;i<4;i++){let y=top+i*plotH/3;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText(Math.round(max*(1-i/3)),2,y+3)}
+ let step=plotW/(vals.length-1);
+ function line(arr,color,dash){ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.setLineDash(dash||[]);arr.forEach((v,i)=>{let x=left+i*step,y=top+plotH-(v/max)*plotH;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.setLineDash([])}
+ line(actual,"#39749b");line(vals.slice(6), "#c58c5a",[5,4]);
+ ctx.fillStyle="#39749b";ctx.fillText(t("chartActual"),left, h-4);ctx.fillStyle="#c58c5a";ctx.fillText(t("chartForecast"),left+100,h-4);
+}
+document.getElementById("today").textContent=new Intl.DateTimeFormat(lang==="kk"?"kk-KZ":"ru-RU",{day:"numeric",month:"long",year:"numeric"}).format(new Date());
+render();window.addEventListener("resize",renderChart);
+</script>
+</body></html>
